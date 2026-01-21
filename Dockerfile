@@ -1,25 +1,17 @@
 FROM eclipse-temurin:21-jdk AS build
 WORKDIR /app
 
-# Copy only what we need for a reproducible Gradle build
-COPY gradlew gradlew.bat build.gradle settings.gradle /app/
-COPY gradle /app/gradle
+COPY pom.xml .
+RUN mvn -B dependency:go-offline
 
-# Copy sources
-COPY src /app/src
+COPY src ./src
+RUN mvn clean package -DskipTests
 
-# Build a runnable jar (skip tests in CI image build unless you...)
-RUN chmod +x /app/gradlew && /app/gradlew clean bootJar -x test
-
-FROM eclipse-temurin:21-jre AS runtime
+FROM eclipse-temurin:21-jre
 WORKDIR /app
 
-ENV TZ=UTC
-ENV JAVA_OPTS=""
-
-COPY --from=build /app/build/libs/*.jar /app/app.jar
+COPY --from=build /app/target/*.war app.war
 
 EXPOSE 8080
 
-# Use sh -c so JAVA_OPTS is expanded
-ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar /app/app.jar"]
+ENTRYPOINT ["java", "-jar", "app.war"]
