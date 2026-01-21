@@ -14,7 +14,7 @@ FROM tomcat:9-jdk8-temurin AS runtime
 
 RUN rm -rf /usr/local/tomcat/webapps/*
 
-COPY --from=build /app/target/*.war /usr/local/tomcat/webapps/app.war
+COPY --from=build /app/target/*.war /usr/local/tomcat/webapps/ROOT.war
 
 EXPOSE 8080
 
