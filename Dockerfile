@@ -1,4 +1,4 @@
-FROM maven:3.9.6-eclipse-temurin-21 AS build
+FROM maven:3.9.6-eclipse-temurin-8 AS build
 
 WORKDIR /app
 
@@ -8,14 +8,14 @@ RUN mvn -B dependency:go-offline
 
 COPY src ./src
 
-RUN mvn clean package -DskipTests
+RUN mvn clean package -Dmaven.test.skip=true
 
-FROM eclipse-temurin:21-jre as RUNTIME
+FROM tomcat:9-jdk8-temurin AS runtime
 
-WORKDIR /app
+RUN rm -rf /usr/local/tomcat/webapps/*
 
-COPY --from=build /app/target/*.war app.war
+COPY --from=build /app/target/*.war /usr/local/tomcat/webapps/app.war
 
 EXPOSE 8080
 
-ENTRYPOINT ["java", "-jar", "app.war"]
+CMD ["catalina.sh", "run"]
